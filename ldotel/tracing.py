@@ -4,7 +4,6 @@ from ldclient.hook import Hook as LDHook, EvaluationSeriesContext, Metadata
 from opentelemetry import trace
 from opentelemetry.trace import Span, set_span_in_context, get_current_span
 from opentelemetry.context import attach, detach
-from logging import getLogger, Logger
 from dataclasses import dataclass
 
 
@@ -24,12 +23,6 @@ class HookOptions:
     """
     If set to true, then the tracing hook will add the evaluated flag value to
     span events.
-    """
-
-    logger: Logger = getLogger('launchdarkly-otel')
-    """
-    The logger used for hook execution. Provide a custom logger or fallback to
-    a default logger.
     """
 
 
