@@ -7,8 +7,8 @@ from ldclient.integrations.test_data import TestData
 
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter, SpanExporter
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.trace import Tracer, TracerProvider
-from opentelemetry.trace import set_tracer_provider, get_tracer_provider
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.trace import set_tracer_provider, get_tracer_provider, Tracer
 
 
 @pytest.fixture
@@ -27,7 +27,7 @@ def exporter() -> SpanExporter:
 @pytest.fixture
 def tracer(exporter: SpanExporter) -> Tracer:
     set_tracer_provider(TracerProvider())
-    get_tracer_provider().add_span_processor(SimpleSpanProcessor(exporter))
+    get_tracer_provider().add_span_processor(SimpleSpanProcessor(exporter))  # type: ignore[attr-defined]
 
     return get_tracer_provider().get_tracer('pytest')
 
@@ -44,7 +44,7 @@ class TestHookOptions:
         client.add_hook(Hook())
         client.variation('boolean', Context.create('org-key', 'org'), False)
 
-        spans = exporter.get_finished_spans()
+        spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 0
 
     def test_records_basic_span_event(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
@@ -52,7 +52,7 @@ class TestHookOptions:
         with tracer.start_as_current_span("test_records_basic_span_event"):
             client.variation('boolean', Context.create('org-key', 'org'), False)
 
-        spans = exporter.get_finished_spans()
+        spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 1
         assert len(spans[0].events) == 1
 
@@ -68,7 +68,7 @@ class TestHookOptions:
         with tracer.start_as_current_span("test_can_include_variant"):
             client.variation('boolean', Context.create('org-key', 'org'), False)
 
-        spans = exporter.get_finished_spans()
+        spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 1
         assert len(spans[0].events) == 1
 
@@ -83,7 +83,7 @@ class TestHookOptions:
         client.add_hook(Hook(HookOptions(add_spans=True)))
         client.variation('boolean', Context.create('org-key', 'org'), False)
 
-        spans = exporter.get_finished_spans()
+        spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 1
 
         assert spans[0].attributes['feature_flag.context.key'] == 'org:org-key'
@@ -95,7 +95,7 @@ class TestHookOptions:
         with tracer.start_as_current_span("test_add_span_leaves_events_on_top_level_span"):
             client.variation('boolean', Context.create('org-key', 'org'), False)
 
-        spans = exporter.get_finished_spans()
+        spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 2
 
         ld_span = spans[0]
@@ -118,7 +118,7 @@ class TestHookOptions:
         with tracer.start_as_current_span("test_add_span_leaves_events_on_top_level_span"):
             client.variation('boolean', Context.create('org-key', 'org'), False)
 
-        spans = exporter.get_finished_spans()
+        spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 3
 
         inner = spans[0]
