@@ -3,7 +3,7 @@ LaunchDarkly Server-side OTEL library for Python
 
 [![PyPI](https://img.shields.io/pypi/v/launchdarkly-server-sdk-otel.svg?maxAge=2592000)](https://pypi.python.org/pypi/launchdarkly-server-sdk-otel)
 [![Quality Control](https://github.com/launchdarkly/python-server-sdk-otel/actions/workflows/ci.yml/badge.svg)](https://github.com/launchdarkly/python-server-sdk-otel/actions/workflows/ci.yml)
-[![readthedocs](https://readthedocs.org/projects/launchdarkly-python-sdk-otel/badge/)](https://launchdarkly-python-sdk-otel.readthedocs.io/en/latest/)
+[![readthedocs](https://readthedocs.org/projects/launchdarkly-python-sdk-otel-integration/badge/)](https://launchdarkly-python-sdk-otel-integration.readthedocs.io/en/latest/)
 
 LaunchDarkly overview
 -------------------------
@@ -44,7 +44,7 @@ Learn more
 
 Read our [documentation](http://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [reference guide for the python SDK](http://docs.launchdarkly.com/docs/python-sdk-reference).
 
-Generated API documentation for all versions of the library is on [readthedocs](https://launchdarkly-python-sdk-otel.readthedocs.io/en/latest/).
+Generated API documentation for all versions of the library is on [readthedocs](https://launchdarkly-python-sdk-otel-integration.readthedocs.io/en/latest/).
 
 Contributing
 ------------

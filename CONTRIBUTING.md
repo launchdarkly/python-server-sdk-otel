@@ -73,6 +73,6 @@ It's also desirable to use type hints for private attributes, to catch possible 
 
 ## Documenting types and methods
 
-All classes and public methods outside of `ldotel.impl` should have docstrings in Sphinx format. These are used to build the documentation that is published on [readthedocs.io](https://launchdarkly-python-sdk-otel.readthedocs.io/). See the [Sphinx documentation](https://www.sphinx-doc.org/en/master/) for details of the docstring format.
+All classes and public methods outside of `ldotel.impl` should have docstrings in Sphinx format. These are used to build the documentation that is published on [readthedocs.io](https://launchdarkly-python-sdk-otel-integration.readthedocs.io/). See the [Sphinx documentation](https://www.sphinx-doc.org/en/master/) for details of the docstring format.
 
 Please try to make the style and terminology in documentation comments consistent with other documentation comments in the library. Also, if a class or method is being added that has an equivalent in other libraries, and if we have described it in a consistent away in those other libraries, please reuse the text whenever possible (with adjustments for anything language-specific) rather than writing new text.
