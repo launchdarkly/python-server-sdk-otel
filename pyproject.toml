@@ -7,7 +7,7 @@ license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://docs.launchdarkly.com/sdk/server-side/python"
 repository = "https://github.com/launchdarkly/python-server-sdk-otel"
-documentation = "https://launchdarkly-python-sdk-otel.readthedocs.io/en/latest/"
+documentation = "https://launchdarkly-python-sdk-otel-integration.readthedocs.io/en/latest/"
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
