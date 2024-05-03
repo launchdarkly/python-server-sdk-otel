@@ -32,9 +32,9 @@ launchdarkly_server_sdk_otel-${VERSION}-py3-none-any.whl
 Below is a sample of expected output.
 
 ```
-Verified signature against tlog entry index 76390194 at URL: https://rekor.sigstore.dev/api/v1/log/entries/24296fb24b8ad77ac42700bfad5eb5597ea8bda92acb470aade248c01ccfc44047c0cd5b4433021a
-Verified build using builder "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.7.0" at commit c7b42a2e7486904978d77cf05a07280e7e1bbec2
-Verifying artifact launchdarkly_server_sdk_otel-9.2.2-py3-none-any.whl: PASSED
+Verified signature against tlog entry index 89939519 at URL: https://rekor.sigstore.dev/api/v1/log/entries/24296fb24b8ad77abb8d2f681b007c76a4fe9f89cd9574918683ac8bc87cd6834c5baa479ae5cb98
+Verified build using builder "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.10.0" at commit 984fc268df29918b03f51f2507146f66d8668d03
+Verifying artifact launchdarkly_server_sdk_otel-1.0.0-py3-none-any.whl: PASSED
 
 PASSED: Verified SLSA provenance
 ```
