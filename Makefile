@@ -30,6 +30,9 @@ test: install
 lint: #! Run type analysis and linting checks
 lint: install
 	@poetry run mypy ldotel
+	@poetry run isort --check --atomic ldotel
+	@poetry run pycodestyle ldotel
+
 
 #
 # Documentation generation
