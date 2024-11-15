@@ -1,14 +1,14 @@
 import pytest
+from ldclient import Config, Context, LDClient
+from ldclient.integrations.test_data import TestData
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter, SpanExporter)
+from opentelemetry.trace import (Tracer, get_tracer_provider,
+                                 set_tracer_provider)
 
 from ldotel.tracing import Hook, HookOptions
-
-from ldclient import Config, LDClient, Context
-from ldclient.integrations.test_data import TestData
-
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter, SpanExporter
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.trace import set_tracer_provider, get_tracer_provider, Tracer
 
 
 @pytest.fixture

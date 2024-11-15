@@ -1,10 +1,12 @@
-from ldclient.evaluation import EvaluationDetail
-from ldclient.hook import Hook as LDHook, EvaluationSeriesContext, Metadata
-
-from opentelemetry import trace
-from opentelemetry.trace import Span, set_span_in_context, get_current_span
-from opentelemetry.context import attach, detach
 from dataclasses import dataclass
+
+from ldclient.evaluation import EvaluationDetail
+from ldclient.hook import EvaluationSeriesContext
+from ldclient.hook import Hook as LDHook
+from ldclient.hook import Metadata
+from opentelemetry import trace
+from opentelemetry.context import attach, detach
+from opentelemetry.trace import Span, get_current_span, set_span_in_context
 
 
 @dataclass
