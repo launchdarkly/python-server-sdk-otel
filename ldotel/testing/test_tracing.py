@@ -65,7 +65,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         assert event.attributes['feature_flag.result.variationIndex'] == '0'
         assert 'feature_flag.result.value' not in event.attributes
-        assert 'feature_flag.result.inExperiment' not in event.attributes
+        assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
     def test_can_include_variant(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
         client.add_hook(Hook(HookOptions(include_variant=True)))
@@ -83,7 +83,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         assert event.attributes['feature_flag.result.variationIndex'] == '0'
         assert event.attributes['feature_flag.result.value'] == 'True'
-        assert 'feature_flag.result.inExperiment' not in event.attributes
+        assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
     def test_can_include_value(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
         client.add_hook(Hook(HookOptions(include_value=True)))
@@ -101,7 +101,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         assert event.attributes['feature_flag.result.variationIndex'] == '0'
         assert event.attributes['feature_flag.result.value'] == 'True'
-        assert 'feature_flag.result.inExperiment' not in event.attributes
+        assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
     def test_add_span_creates_span_if_one_not_active(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
         client.add_hook(Hook(HookOptions(add_spans=True)))
@@ -135,7 +135,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         assert event.attributes['feature_flag.result.variationIndex'] == '0'
         assert 'feature_flag.result.value' not in event.attributes
-        assert 'feature_flag.result.inExperiment' not in event.attributes
+        assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
     def test_hook_makes_its_span_active(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
         client.add_hook(Hook(HookOptions(add_spans=True)))
@@ -163,7 +163,7 @@ class TestHookOptions:
         assert middle.events[0].attributes['feature_flag.context.id'] == 'org:org-key'
         assert middle.events[0].attributes['feature_flag.result.variationIndex'] == '0'
         assert 'feature_flag.result.value' not in middle.events[0].attributes
-        assert 'feature_flag.result.inExperiment' not in middle.events[0].attributes
+        assert 'feature_flag.result.reason.inExperiment' not in middle.events[0].attributes
 
         assert top.events[0].name == 'feature_flag'
         assert top.events[0].attributes['feature_flag.key'] == 'boolean'
@@ -171,7 +171,7 @@ class TestHookOptions:
         assert top.events[0].attributes['feature_flag.context.id'] == 'org:org-key'
         assert top.events[0].attributes['feature_flag.result.variationIndex'] == '0'
         assert 'feature_flag.result.value' not in top.events[0].attributes
-        assert 'feature_flag.result.inExperiment' not in top.events[0].attributes
+        assert 'feature_flag.result.reason.inExperiment' not in top.events[0].attributes
 
     def test_records_in_experiment_attribute(self, exporter: SpanExporter, tracer: Tracer):
         series_context = EvaluationSeriesContext(
@@ -203,7 +203,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         assert event.attributes['feature_flag.result.variationIndex'] == '1'
-        assert event.attributes['feature_flag.result.inExperiment'] == 'true'
+        assert event.attributes['feature_flag.result.reason.inExperiment'] == 'true'
         assert 'feature_flag.result.value' not in event.attributes
 
     def test_does_not_include_variation_index_when_none(self, exporter: SpanExporter, tracer: Tracer):
@@ -236,5 +236,5 @@ class TestHookOptions:
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         # variationIndex should not be present when variation_index is None
         assert 'feature_flag.result.variationIndex' not in event.attributes
-        assert 'feature_flag.result.inExperiment' not in event.attributes
+        assert 'feature_flag.result.reason.inExperiment' not in event.attributes
         assert 'feature_flag.result.value' not in event.attributes

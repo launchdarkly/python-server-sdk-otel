@@ -114,7 +114,7 @@ class Hook(LDHook):
             attributes['feature_flag.result.variationIndex'] = str(detail.variation_index)
 
         if detail.reason.get('inExperiment'):
-            attributes['feature_flag.result.inExperiment'] = 'true'
+            attributes['feature_flag.result.reason.inExperiment'] = 'true'
 
         if self.__options.include_value or self.__options.include_variant:
             attributes['feature_flag.result.value'] = str(detail.value)
