@@ -82,25 +82,38 @@ class TestHookOptions:
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
         assert event.attributes['feature_flag.result.variationIndex'] == '0'
-        assert event.attributes['feature_flag.result.value'] == 'True'
+        assert event.attributes['feature_flag.result.value'] == 'true'
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
-    def test_can_include_value(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
+    @pytest.mark.parametrize("flag_key, variations, variation_index, expected_value", [
+        ("string-flag", ["alpha", "beta"], 1, "beta"),
+        ("number-flag", [42, 99], 0, 42),
+        ("array-flag", [[1, 2], [3, 4]], 1, [3, 4]),
+        ("object-flag", [{"a": 1}, {"b": 2}], 0, {"a": 1}),
+    ])
+    def test_can_include_value_types(self, flag_key, variations, variation_index, expected_value, exporter: SpanExporter, tracer: Tracer):
+        td = TestData.data_source()
+        td.update(td.flag(flag_key).variations(*variations).variation_for_all(variation_index))
+        config = Config('sdk-key', update_processor_class=td, send_events=False)
+        client = LDClient(config=config)
         client.add_hook(Hook(HookOptions(include_value=True)))
-        with tracer.start_as_current_span("test_can_include_value"):
-            client.variation('boolean', Context.create('org-key', 'org'), False)
+
+        with tracer.start_as_current_span(f"test_can_include_value_types_{flag_key}"):
+            context = Context.create('org-key', 'org')
+            client.variation(flag_key, context, None)
 
         spans = exporter.get_finished_spans()  # type: ignore[attr-defined]
         assert len(spans) == 1
         assert len(spans[0].events) == 1
 
+        import json
         event = spans[0].events[0]
         assert event.name == 'feature_flag'
-        assert event.attributes['feature_flag.key'] == 'boolean'
+        assert event.attributes['feature_flag.key'] == flag_key
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
-        assert event.attributes['feature_flag.result.variationIndex'] == '0'
-        assert event.attributes['feature_flag.result.value'] == 'True'
+        assert event.attributes['feature_flag.result.variationIndex'] == str(variation_index)
+        assert event.attributes['feature_flag.result.value'] == json.dumps(expected_value)
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
     def test_add_span_creates_span_if_one_not_active(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):

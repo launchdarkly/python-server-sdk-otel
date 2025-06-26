@@ -1,3 +1,4 @@
+import json
 import warnings
 from dataclasses import dataclass
 
@@ -117,7 +118,7 @@ class Hook(LDHook):
             attributes['feature_flag.result.reason.inExperiment'] = 'true'
 
         if self.__options.include_value or self.__options.include_variant:
-            attributes['feature_flag.result.value'] = str(detail.value)
+            attributes['feature_flag.result.value'] = json.dumps(detail.value)
 
         span.add_event('feature_flag', attributes=attributes)
 
