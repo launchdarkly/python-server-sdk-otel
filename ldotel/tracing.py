@@ -1,3 +1,5 @@
+import json
+import warnings
 from dataclasses import dataclass
 
 from ldclient.evaluation import EvaluationDetail
@@ -25,6 +27,16 @@ class HookOptions:
     """
     If set to true, then the tracing hook will add the evaluated flag value to
     span events.
+
+    .. deprecated:: 1.0.0
+        This option is deprecated and will be removed in a future version.
+        Use :attr:`include_value` instead.
+    """
+
+    include_value: bool = False
+    """
+    If set to true, then the tracing hook will add the evaluated flag value to
+    span events.
     """
 
 
@@ -32,6 +44,12 @@ class Hook(LDHook):
     def __init__(self, options: HookOptions = HookOptions()):
         self.__tracer = trace.get_tracer_provider().get_tracer("launchdarkly")
         self.__options = options
+        if self.__options.include_variant:
+            warnings.warn(
+                "The 'include_variant' option is deprecated and will be removed in a future version. "
+                "Use 'include_value' instead.",
+                DeprecationWarning,
+            )
 
     @property
     def metadata(self) -> Metadata:
@@ -56,7 +74,7 @@ class Hook(LDHook):
             return data
 
         attributes = {
-            'feature_flag.context.key': series_context.context.fully_qualified_key,
+            'feature_flag.context.id': series_context.context.fully_qualified_key,
             'feature_flag.key': series_context.key,
         }
 
@@ -88,13 +106,19 @@ class Hook(LDHook):
             return data
 
         attributes = {
-            'feature_flag.context.key': series_context.context.fully_qualified_key,
+            'feature_flag.context.id': series_context.context.fully_qualified_key,
             'feature_flag.key': series_context.key,
-            'feature_flag.provider_name': 'LaunchDarkly'
+            'feature_flag.provider.name': 'LaunchDarkly',
         }
 
-        if self.__options.include_variant:
-            attributes['feature_flag.variant'] = str(detail.value)
+        if detail.variation_index is not None:
+            attributes['feature_flag.result.variationIndex'] = str(detail.variation_index)
+
+        if detail.reason.get('inExperiment'):
+            attributes['feature_flag.result.reason.inExperiment'] = 'true'
+
+        if self.__options.include_value or self.__options.include_variant:
+            attributes['feature_flag.result.value'] = json.dumps(detail.value)
 
         span.add_event('feature_flag', attributes=attributes)
 
