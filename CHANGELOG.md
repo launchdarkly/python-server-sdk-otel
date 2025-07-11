@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly Python OTEL package will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.0](https://github.com/launchdarkly/python-server-sdk-otel/compare/1.1.0...1.2.0) (2025-07-11)
+
+
+### Features
+
+* Update tracing hook for semantic convention updates. ([#31](https://github.com/launchdarkly/python-server-sdk-otel/issues/31)) ([25dafad](https://github.com/launchdarkly/python-server-sdk-otel/commit/25dafade17eb37caf89f4d0a415a57f711ebef10))
+
 ## [1.1.0](https://github.com/launchdarkly/python-server-sdk-otel/compare/1.0.0...1.1.0) (2025-06-26)
 
 
