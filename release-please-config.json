@@ -8,8 +8,7 @@
         "ldotel/__init__.py",
         "PROVENANCE.md"
       ],
-      "include-component-in-tag": false,
-      "force-tag-creation": true
+      "include-component-in-tag": false
     }
   }
 }
