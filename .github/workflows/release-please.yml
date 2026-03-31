@@ -53,15 +53,8 @@ jobs:
         with:
           password: ${{env.PYPI_AUTH_TOKEN}}
 
-      - name: Generate checksums file
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
-        env:
-          HASHES: ${{ steps.build.outputs.package-hashes }}
-        run: |
-          echo "$HASHES" | base64 -d > checksums.txt
-
       - name: Attest build provenance
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         uses: actions/attest@v4
         with:
-          subject-checksums: checksums.txt
+          subject-path: 'dist/*'
