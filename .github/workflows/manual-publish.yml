@@ -45,6 +45,7 @@ jobs:
           password: ${{env.PYPI_AUTH_TOKEN}}
 
       - name: Generate checksums file
+        if: ${{ inputs.dry_run == false }}
         env:
           HASHES: ${{ steps.build.outputs.package-hashes }}
         run: |
