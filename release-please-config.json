@@ -5,7 +5,8 @@
       "versioning": "default",
       "include-v-in-tag": false,
       "extra-files": ["ldotel/__init__.py", "PROVENANCE.md"],
-      "include-component-in-tag": false
+      "include-component-in-tag": false,
+      "draft": true
     }
   }
 }
