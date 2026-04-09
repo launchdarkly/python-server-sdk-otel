@@ -4,7 +4,10 @@
       "release-type": "python",
       "versioning": "default",
       "include-v-in-tag": false,
-      "extra-files": ["ldotel/__init__.py", "PROVENANCE.md"],
+      "extra-files": [
+        "ldotel/__init__.py",
+        "PROVENANCE.md"
+      ],
       "include-component-in-tag": false
     }
   }
