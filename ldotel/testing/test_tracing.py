@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from ldclient import Config, Context, LDClient
 from ldclient.evaluation import EvaluationDetail
@@ -63,7 +65,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.key'] == 'boolean'
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
-        assert event.attributes['feature_flag.result.variationIndex'] == '0'
+        assert event.attributes['feature_flag.result.variationIndex'] == 0
         assert 'feature_flag.result.value' not in event.attributes
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
@@ -81,7 +83,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.key'] == 'boolean'
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
-        assert event.attributes['feature_flag.result.variationIndex'] == '0'
+        assert event.attributes['feature_flag.result.variationIndex'] == 0
         assert event.attributes['feature_flag.result.value'] == 'true'
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
@@ -112,7 +114,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.key'] == flag_key
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
-        assert event.attributes['feature_flag.result.variationIndex'] == str(variation_index)
+        assert event.attributes['feature_flag.result.variationIndex'] == variation_index
         assert event.attributes['feature_flag.result.value'] == json.dumps(expected_value)
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
@@ -146,7 +148,7 @@ class TestHookOptions:
         assert event.attributes['feature_flag.key'] == 'boolean'
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
-        assert event.attributes['feature_flag.result.variationIndex'] == '0'
+        assert event.attributes['feature_flag.result.variationIndex'] == 0
         assert 'feature_flag.result.value' not in event.attributes
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
 
@@ -174,7 +176,7 @@ class TestHookOptions:
         assert middle.events[0].attributes['feature_flag.key'] == 'boolean'
         assert middle.events[0].attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert middle.events[0].attributes['feature_flag.context.id'] == 'org:org-key'
-        assert middle.events[0].attributes['feature_flag.result.variationIndex'] == '0'
+        assert middle.events[0].attributes['feature_flag.result.variationIndex'] == 0
         assert 'feature_flag.result.value' not in middle.events[0].attributes
         assert 'feature_flag.result.reason.inExperiment' not in middle.events[0].attributes
 
@@ -182,7 +184,7 @@ class TestHookOptions:
         assert top.events[0].attributes['feature_flag.key'] == 'boolean'
         assert top.events[0].attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert top.events[0].attributes['feature_flag.context.id'] == 'org:org-key'
-        assert top.events[0].attributes['feature_flag.result.variationIndex'] == '0'
+        assert top.events[0].attributes['feature_flag.result.variationIndex'] == 0
         assert 'feature_flag.result.value' not in top.events[0].attributes
         assert 'feature_flag.result.reason.inExperiment' not in top.events[0].attributes
 
@@ -215,8 +217,8 @@ class TestHookOptions:
         assert event.attributes['feature_flag.key'] == 'experiment-flag'
         assert event.attributes['feature_flag.provider.name'] == 'LaunchDarkly'
         assert event.attributes['feature_flag.context.id'] == 'org:org-key'
-        assert event.attributes['feature_flag.result.variationIndex'] == '1'
-        assert event.attributes['feature_flag.result.reason.inExperiment'] == 'true'
+        assert event.attributes['feature_flag.result.variationIndex'] == 1
+        assert event.attributes['feature_flag.result.reason.inExperiment'] is True
         assert 'feature_flag.result.value' not in event.attributes
 
     def test_does_not_include_variation_index_when_none(self, exporter: SpanExporter, tracer: Tracer):
@@ -251,3 +253,63 @@ class TestHookOptions:
         assert 'feature_flag.result.variationIndex' not in event.attributes
         assert 'feature_flag.result.reason.inExperiment' not in event.attributes
         assert 'feature_flag.result.value' not in event.attributes
+
+    def test_records_attributes_with_specified_types(self, exporter: SpanExporter, tracer: Tracer):
+        """
+        The OTEL spec types variationIndex as an int and inExperiment as a
+        boolean. Guard against them regressing to strings, which would break
+        consumers that match on the typed value.
+        """
+        series_context = EvaluationSeriesContext(
+            key='experiment-flag',
+            context=Context.create('org-key', 'org'),
+            default_value=False,
+            method='variation',
+        )
+        detail = EvaluationDetail(value=True, variation_index=1, reason={"inExperiment": True})
+
+        hook = Hook()
+        with tracer.start_as_current_span("test_records_attributes_with_specified_types"):
+            data = hook.before_evaluation(series_context, {})  # type: ignore
+            hook.after_evaluation(series_context, data, detail)  # type: ignore
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+
+        variation_index = event.attributes['feature_flag.result.variationIndex']
+        assert isinstance(variation_index, int) and not isinstance(variation_index, bool)
+        assert variation_index == 1
+
+        in_experiment = event.attributes['feature_flag.result.reason.inExperiment']
+        assert isinstance(in_experiment, bool)
+        assert in_experiment is True
+
+    def test_records_set_id_when_environment_id_configured(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
+        client.add_hook(Hook(HookOptions(environment_id='my-environment-id')))
+        with tracer.start_as_current_span("test_records_set_id_when_environment_id_configured"):
+            client.variation('boolean', Context.create('org-key', 'org'), False)
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert event.attributes['feature_flag.set.id'] == 'my-environment-id'
+
+    def test_omits_set_id_when_environment_id_not_configured(self, client: LDClient, exporter: SpanExporter, tracer: Tracer):
+        client.add_hook(Hook())
+        with tracer.start_as_current_span("test_omits_set_id_when_environment_id_not_configured"):
+            client.variation('boolean', Context.create('org-key', 'org'), False)
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert 'feature_flag.set.id' not in event.attributes
+
+    @pytest.mark.parametrize("environment_id", ['', 0, False, []])
+    def test_ignores_and_logs_invalid_environment_id(self, environment_id, td: TestData, exporter: SpanExporter, tracer: Tracer, caplog):
+        config = Config('sdk-key', update_processor_class=td, send_events=False)
+        client = LDClient(config=config)
+
+        with caplog.at_level(logging.WARNING, logger='ldclient.otel'):
+            client.add_hook(Hook(HookOptions(environment_id=environment_id)))
+
+        with tracer.start_as_current_span("test_ignores_and_logs_invalid_environment_id"):
+            client.variation('boolean', Context.create('org-key', 'org'), False)
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert 'feature_flag.set.id' not in event.attributes
+        assert any(record.levelname == 'WARNING' for record in caplog.records)
