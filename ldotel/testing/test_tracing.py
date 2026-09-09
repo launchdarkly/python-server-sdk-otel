@@ -1,4 +1,6 @@
 import logging
+from dataclasses import dataclass
+from typing import Any, Optional
 
 import pytest
 from ldclient import Config, Context, LDClient
@@ -13,6 +15,31 @@ from opentelemetry.trace import (Tracer, get_tracer_provider,
                                  set_tracer_provider)
 
 from ldotel.tracing import Hook, HookOptions
+
+
+@dataclass
+class _SeriesContextWithoutEnvironmentId:
+    """
+    The shape of ``EvaluationSeriesContext`` in SDK versions which do not
+    report the environment ID to hooks.
+    """
+
+    key: str
+    context: Context
+    default_value: Any
+    method: str
+
+
+def _series_context(environment_id: Optional[str]) -> EvaluationSeriesContext:
+    series_context = EvaluationSeriesContext(
+        key='boolean',
+        context=Context.create('org-key', 'org'),
+        default_value=False,
+        method='variation',
+    )
+    setattr(series_context, 'environment_id', environment_id)
+
+    return series_context
 
 
 @pytest.fixture
@@ -295,6 +322,56 @@ class TestHookOptions:
         client.add_hook(Hook())
         with tracer.start_as_current_span("test_omits_set_id_when_environment_id_not_configured"):
             client.variation('boolean', Context.create('org-key', 'org'), False)
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert 'feature_flag.set.id' not in event.attributes
+
+    def test_records_set_id_from_series_context(self, exporter: SpanExporter, tracer: Tracer):
+        series_context = _series_context(environment_id='series-environment-id')
+
+        hook = Hook()
+        with tracer.start_as_current_span("test_records_set_id_from_series_context"):
+            data = hook.before_evaluation(series_context, {})  # type: ignore
+            hook.after_evaluation(series_context, data, EvaluationDetail(value=True, variation_index=0, reason={}))  # type: ignore
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert event.attributes['feature_flag.set.id'] == 'series-environment-id'
+
+    def test_configured_environment_id_takes_precedence_over_series_context(self, exporter: SpanExporter, tracer: Tracer):
+        series_context = _series_context(environment_id='series-environment-id')
+
+        hook = Hook(HookOptions(environment_id='configured-environment-id'))
+        with tracer.start_as_current_span("test_configured_environment_id_takes_precedence_over_series_context"):
+            data = hook.before_evaluation(series_context, {})  # type: ignore
+            hook.after_evaluation(series_context, data, EvaluationDetail(value=True, variation_index=0, reason={}))  # type: ignore
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert event.attributes['feature_flag.set.id'] == 'configured-environment-id'
+
+    @pytest.mark.parametrize("environment_id", [None, ''])
+    def test_omits_set_id_when_series_context_environment_id_is_unusable(self, environment_id, exporter: SpanExporter, tracer: Tracer):
+        series_context = _series_context(environment_id=environment_id)
+
+        hook = Hook()
+        with tracer.start_as_current_span("test_omits_set_id_when_series_context_environment_id_is_unusable"):
+            data = hook.before_evaluation(series_context, {})  # type: ignore
+            hook.after_evaluation(series_context, data, EvaluationDetail(value=True, variation_index=0, reason={}))  # type: ignore
+
+        event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
+        assert 'feature_flag.set.id' not in event.attributes
+
+    def test_omits_set_id_when_series_context_has_no_environment_id_attribute(self, exporter: SpanExporter, tracer: Tracer):
+        series_context = _SeriesContextWithoutEnvironmentId(
+            key='boolean',
+            context=Context.create('org-key', 'org'),
+            default_value=False,
+            method='variation',
+        )
+
+        hook = Hook()
+        with tracer.start_as_current_span("test_omits_set_id_when_series_context_has_no_environment_id_attribute"):
+            data = hook.before_evaluation(series_context, {})  # type: ignore
+            hook.after_evaluation(series_context, data, EvaluationDetail(value=True, variation_index=0, reason={}))  # type: ignore
 
         event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
         assert 'feature_flag.set.id' not in event.attributes

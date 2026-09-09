@@ -49,6 +49,10 @@ class HookOptions:
     If set, then the tracing hook will add the environment ID to span events as
     the ``feature_flag.set.id`` attribute.
 
+    SDK versions which report the environment ID to hooks do so automatically,
+    so this option is only required for SDK versions which do not. When both
+    are available, this option takes precedence.
+
     The value must be a non-empty string. Any other value is ignored, and a
     warning is logged, which is equivalent to not specifying an environment ID
     at all.
@@ -71,6 +75,14 @@ def _validate_environment_id(environment_id: Optional[str]) -> Optional[str]:
         return None
 
     return environment_id
+
+
+def _series_context_environment_id(series_context: EvaluationSeriesContext) -> Optional[str]:
+    environment_id = getattr(series_context, 'environment_id', None)
+    if isinstance(environment_id, str) and environment_id != '':
+        return environment_id
+
+    return None
 
 
 class Hook(LDHook):
@@ -145,8 +157,9 @@ class Hook(LDHook):
             'feature_flag.provider.name': 'LaunchDarkly',
         }
 
-        if self.__environment_id is not None:
-            attributes['feature_flag.set.id'] = self.__environment_id
+        environment_id = self.__environment_id or _series_context_environment_id(series_context)
+        if environment_id is not None:
+            attributes['feature_flag.set.id'] = environment_id
 
         if detail.variation_index is not None:
             attributes['feature_flag.result.variationIndex'] = detail.variation_index
