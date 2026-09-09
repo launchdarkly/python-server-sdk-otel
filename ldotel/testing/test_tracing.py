@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -377,16 +376,13 @@ class TestHookOptions:
         assert 'feature_flag.set.id' not in event.attributes
 
     @pytest.mark.parametrize("environment_id", ['', 0, False, []])
-    def test_ignores_and_logs_invalid_environment_id(self, environment_id, td: TestData, exporter: SpanExporter, tracer: Tracer, caplog):
+    def test_ignores_invalid_environment_id(self, environment_id, td: TestData, exporter: SpanExporter, tracer: Tracer):
         config = Config('sdk-key', update_processor_class=td, send_events=False)
         client = LDClient(config=config)
+        client.add_hook(Hook(HookOptions(environment_id=environment_id)))
 
-        with caplog.at_level(logging.WARNING, logger='ldclient.otel'):
-            client.add_hook(Hook(HookOptions(environment_id=environment_id)))
-
-        with tracer.start_as_current_span("test_ignores_and_logs_invalid_environment_id"):
+        with tracer.start_as_current_span("test_ignores_invalid_environment_id"):
             client.variation('boolean', Context.create('org-key', 'org'), False)
 
         event = exporter.get_finished_spans()[0].events[0]  # type: ignore[attr-defined]
         assert 'feature_flag.set.id' not in event.attributes
-        assert any(record.levelname == 'WARNING' for record in caplog.records)

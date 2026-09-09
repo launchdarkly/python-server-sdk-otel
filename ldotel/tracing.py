@@ -1,5 +1,4 @@
 import json
-import logging
 import warnings
 from dataclasses import dataclass
 from typing import Dict, Optional
@@ -12,8 +11,6 @@ from opentelemetry import trace
 from opentelemetry.context import attach, detach
 from opentelemetry.trace import Span, get_current_span, set_span_in_context
 from opentelemetry.util.types import AttributeValue
-
-log = logging.getLogger('ldclient.otel')
 
 
 @dataclass
@@ -53,32 +50,12 @@ class HookOptions:
     so this option is only required for SDK versions which do not. When both
     are available, this option takes precedence.
 
-    The value must be a non-empty string. Any other value is ignored, and a
-    warning is logged, which is equivalent to not specifying an environment ID
-    at all.
+    The value must be a non-empty string. Any other value is ignored, which is
+    equivalent to not specifying an environment ID at all.
     """
 
 
-def _validate_environment_id(environment_id: Optional[str]) -> Optional[str]:
-    """
-    Validate a configured environment ID, returning it only when it is a
-    non-empty string. An invalid value is logged and treated as unset.
-    """
-    if environment_id is None:
-        return None
-
-    if not isinstance(environment_id, str) or environment_id == '':
-        log.warning(
-            'The environment ID provided to the LaunchDarkly tracing hook must be a non-empty string. '
-            'The feature_flag.set.id attribute will not be added to span events.'
-        )
-        return None
-
-    return environment_id
-
-
-def _series_context_environment_id(series_context: EvaluationSeriesContext) -> Optional[str]:
-    environment_id = getattr(series_context, 'environment_id', None)
+def _valid_environment_id(environment_id: Optional[str]) -> Optional[str]:
     if isinstance(environment_id, str) and environment_id != '':
         return environment_id
 
@@ -89,7 +66,7 @@ class Hook(LDHook):
     def __init__(self, options: HookOptions = HookOptions()):
         self.__tracer = trace.get_tracer_provider().get_tracer("launchdarkly")
         self.__options = options
-        self.__environment_id = _validate_environment_id(options.environment_id)
+        self.__environment_id = _valid_environment_id(options.environment_id)
         if self.__options.include_variant:
             warnings.warn(
                 "The 'include_variant' option is deprecated and will be removed in a future version. "
@@ -157,7 +134,7 @@ class Hook(LDHook):
             'feature_flag.provider.name': 'LaunchDarkly',
         }
 
-        environment_id = self.__environment_id or _series_context_environment_id(series_context)
+        environment_id = self.__environment_id or _valid_environment_id(getattr(series_context, 'environment_id', None))
         if environment_id is not None:
             attributes['feature_flag.set.id'] = environment_id
 
