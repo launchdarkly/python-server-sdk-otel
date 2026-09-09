@@ -1,6 +1,7 @@
 import json
 import warnings
 from dataclasses import dataclass
+from typing import Dict, Optional
 
 from ldclient.evaluation import EvaluationDetail
 from ldclient.hook import EvaluationSeriesContext
@@ -9,6 +10,7 @@ from ldclient.hook import Metadata
 from opentelemetry import trace
 from opentelemetry.context import attach, detach
 from opentelemetry.trace import Span, get_current_span, set_span_in_context
+from opentelemetry.util.types import AttributeValue
 
 
 @dataclass
@@ -39,11 +41,32 @@ class HookOptions:
     span events.
     """
 
+    environment_id: Optional[str] = None
+    """
+    If set, then the tracing hook will add the environment ID to span events as
+    the ``feature_flag.set.id`` attribute.
+
+    SDK versions which report the environment ID to hooks do so automatically,
+    so this option is only required for SDK versions which do not. When both
+    are available, this option takes precedence.
+
+    The value must be a non-empty string. Any other value is ignored, which is
+    equivalent to not specifying an environment ID at all.
+    """
+
+
+def _valid_environment_id(environment_id: Optional[str]) -> Optional[str]:
+    if isinstance(environment_id, str) and environment_id != '':
+        return environment_id
+
+    return None
+
 
 class Hook(LDHook):
     def __init__(self, options: HookOptions = HookOptions()):
         self.__tracer = trace.get_tracer_provider().get_tracer("launchdarkly")
         self.__options = options
+        self.__environment_id = _valid_environment_id(options.environment_id)
         if self.__options.include_variant:
             warnings.warn(
                 "The 'include_variant' option is deprecated and will be removed in a future version. "
@@ -105,17 +128,21 @@ class Hook(LDHook):
         if span is None:
             return data
 
-        attributes = {
+        attributes: Dict[str, AttributeValue] = {
             'feature_flag.context.id': series_context.context.fully_qualified_key,
             'feature_flag.key': series_context.key,
             'feature_flag.provider.name': 'LaunchDarkly',
         }
 
+        environment_id = self.__environment_id or _valid_environment_id(getattr(series_context, 'environment_id', None))
+        if environment_id is not None:
+            attributes['feature_flag.set.id'] = environment_id
+
         if detail.variation_index is not None:
-            attributes['feature_flag.result.variationIndex'] = str(detail.variation_index)
+            attributes['feature_flag.result.variationIndex'] = detail.variation_index
 
         if detail.reason.get('inExperiment'):
-            attributes['feature_flag.result.reason.inExperiment'] = 'true'
+            attributes['feature_flag.result.reason.inExperiment'] = True
 
         if self.__options.include_value or self.__options.include_variant:
             attributes['feature_flag.result.value'] = json.dumps(detail.value)
