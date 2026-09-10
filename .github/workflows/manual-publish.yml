@@ -24,6 +24,8 @@ jobs:
 
       - name: Install poetry
         uses: abatilo/actions-poetry@7b6d33e44b4f08d7021a1dee3c044e9c253d6439
+        with:
+          poetry-version: "1.8.5"
 
       - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
         name: 'Get PyPI token'
