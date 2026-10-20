@@ -14,7 +14,7 @@ LaunchDarkly overview
 Supported Python versions
 -----------------------
 
-This version of the library has a minimum Python version of 3.9.
+This version of the library has a minimum Python version of 3.10.
 
 Getting started
 -----------
