@@ -2,6 +2,19 @@
 
 All notable changes to the LaunchDarkly Python OTEL package will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.3.0](https://github.com/launchdarkly/python-server-sdk-otel/compare/1.2.1...1.3.0) (2026-10-20)
+
+
+### Features
+
+* Add support for Python 3.14 ([8411698](https://github.com/launchdarkly/python-server-sdk-otel/commit/84116983144a1c8e66b7f8ab3438549b68bac0c5))
+* Drop support for Python 3.9 ([8411698](https://github.com/launchdarkly/python-server-sdk-otel/commit/84116983144a1c8e66b7f8ab3438549b68bac0c5))
+
+
+### Bug Fixes
+
+* Require launchdarkly-server-sdk 9.18.3 or newer ([#59](https://github.com/launchdarkly/python-server-sdk-otel/issues/59)) ([0c2a885](https://github.com/launchdarkly/python-server-sdk-otel/commit/0c2a885ed000a806d71cda2ab504fd0d72534d9c))
+
 ## [1.2.1](https://github.com/launchdarkly/python-server-sdk-otel/compare/1.2.0...1.2.1) (2026-09-09)
 
 
