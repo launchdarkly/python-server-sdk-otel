@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install poetry
-        uses: abatilo/actions-poetry@7b6d33e44b4f08d7021a1dee3c044e9c253d6439
+        uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1
         with:
           poetry-version: "1.8.5"
 
